@@ -12,25 +12,44 @@ export interface SheetEntry {
 }
 
 interface BottomSheetState {
+  registry: Record<string, SheetEntry>;
   stack: SheetEntry[];
-  open: (sheet: SheetEntry) => void;
+  register: (sheet: SheetEntry) => void;
+  open: (sheetOrRef: SheetEntry | { id: string }) => void;
   close: (id?: string) => void;
   closeAll: () => void;
   replace: (sheet: SheetEntry) => void;
 }
 
-export const useBottomSheetStore = create<BottomSheetState>((set) => ({
+export const useBottomSheetStore = create<BottomSheetState>((set, get) => ({
+  registry: {},
   stack: [],
 
-  open: (sheet) =>
+  register: (sheet) =>
+    set((state) => ({
+      registry: { ...state.registry, [sheet.id]: sheet },
+    })),
+
+  open: (sheetOrRef) =>
     set((state) => {
       if (state.stack.length >= MAX_STACK_DEPTH) {
         console.warn(
-          `[BottomSheetStore] Stack depth limit (${MAX_STACK_DEPTH}) reached — refusing to push "${sheet.id}"`,
+          `[BottomSheetStore] Stack depth limit (${MAX_STACK_DEPTH}) reached — refusing to push "${sheetOrRef.id}"`,
         );
         return state;
       }
-      return { stack: [...state.stack, sheet] };
+      // If only id was passed, look up from registry.
+      const entry =
+        "items" in sheetOrRef && sheetOrRef.items
+          ? (sheetOrRef as SheetEntry)
+          : state.registry[sheetOrRef.id];
+      if (!entry) {
+        console.warn(
+          `[BottomSheetStore] Sheet "${sheetOrRef.id}" not found in registry`,
+        );
+        return state;
+      }
+      return { stack: [...state.stack, entry] };
     }),
 
   close: (id) =>

@@ -29,8 +29,18 @@ interface SduiNodeProps<TSchema extends z.ZodTypeAny> {
 
 export function SduiNode<TSchema extends z.ZodTypeAny>(
   props: SduiNodeProps<TSchema>,
-): React.ReactElement {
-  const validated = props.schema.parse(props.data);
+): React.ReactElement | null {
+  const result = props.schema.safeParse(props.data);
+  if (!result.success) {
+    if (__DEV__) {
+      console.warn(
+        `[SduiNode] Validation failed for "${props.id}":`,
+        result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+      );
+    }
+    return null;
+  }
+  const validated = result.data;
   const actionEngine = useActionEngine();
   const telemetry = useTelemetry();
 

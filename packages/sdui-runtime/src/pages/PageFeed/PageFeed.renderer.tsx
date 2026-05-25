@@ -52,7 +52,6 @@ const styles = StyleSheet.create({
  */
 export function PageFeedRenderer({ page }: PageProps): React.ReactElement {
   const actionEngine = useActionEngine();
-  const bottomSheetStore = useBottomSheetStore();
   const { refreshing, onRefresh } = usePageRefresh(page.on_refresh);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
@@ -63,11 +62,12 @@ export function PageFeedRenderer({ page }: PageProps): React.ReactElement {
   const loader = pageData.loader;
   const emptyState = pageData.empty_state;
 
-  // Register inline bottom sheets
+  // Register inline bottom sheets so sheet actions can open them by ID later.
   useEffect(() => {
     if (page.bottom_sheets) {
+      const store = useBottomSheetStore.getState();
       for (const sheet of page.bottom_sheets) {
-        bottomSheetStore.open({
+        store.register({
           id: sheet.id,
           title: sheet.title,
           size: sheet.size ?? "medium",
@@ -75,10 +75,9 @@ export function PageFeedRenderer({ page }: PageProps): React.ReactElement {
           on_dismiss: sheet.on_dismiss,
           on_open: sheet.on_open,
         });
-        bottomSheetStore.close(sheet.id);
       }
     }
-  }, [page.bottom_sheets, bottomSheetStore]);
+  }, [page.bottom_sheets]);
 
   // Page lifecycle: on_load / on_dismount
   useEffect(() => {

@@ -1,9 +1,18 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { TabComponentSchema } from "@one-impression/sdk-native-sdui";
-import { Tab as DSTab } from "@amplify-ai/ui-native";
+import { Tab as DSTab, resolveColor, resolveIconSize } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
-import { Interpreter } from "../../interpreter/index.js";
+import { useIconStore, parseSvg } from "../../icon-store/index.js";
+
+function TabIconInner({ name, color, size }: { name: string; color?: string; size?: number | string }) {
+  const { getIcon } = useIconStore();
+  const svg = getIcon(name);
+  const resolvedColor = resolveColor(color as any) ?? undefined;
+  const resolvedSize = resolveIconSize(size as any) ?? 20;
+  const SvgComponent = parseSvg(name, svg);
+  return <SvgComponent width={resolvedSize} height={resolvedSize} color={resolvedColor} />;
+}
 
 export function TabRenderer(node: Node): React.ReactElement {
   return (
@@ -20,9 +29,9 @@ export function TabRenderer(node: Node): React.ReactElement {
     >
       {(v) => (
         <DSTab
-          label={v.label.data.text}
+          label={v.label?.text ?? ""}
           active={v.active}
-          icon={v.icon ? <Interpreter node={v.icon} /> : undefined}
+          icon={v.icon ? <TabIconInner name={v.icon.name} color={v.icon.color} size={v.icon.size} /> : undefined}
         />
       )}
     </SduiNode>

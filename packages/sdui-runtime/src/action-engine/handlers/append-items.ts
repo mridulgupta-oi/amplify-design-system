@@ -14,8 +14,10 @@ export async function handleAppendItems(
   const payload = AppendItemsPayloadSchema.parse(action.payload);
 
   const { usePageStore } = await import("../../state/usePageStore.js");
-  usePageStore.getState().appendItems(payload.target, payload.items, {
-    cursor: payload.cursor,
-    hasMore: payload.has_more,
-  });
+  usePageStore.getState().appendSection(
+    payload.target,
+    payload.items,
+    payload.cursor ?? null,
+    payload.has_more ?? false,
+  );
 }

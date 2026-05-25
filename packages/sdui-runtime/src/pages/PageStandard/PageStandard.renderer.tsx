@@ -20,16 +20,15 @@ interface PageProps {
  */
 export function PageStandardRenderer({ page }: PageProps): React.ReactElement {
   const actionEngine = useActionEngine();
-  const bottomSheetStore = useBottomSheetStore();
   const { refreshing, onRefresh } = usePageRefresh(page.on_refresh);
 
-  // Register inline bottom sheets so sheet actions can open them later
+  // Register inline bottom sheets so sheet actions can open them by ID later.
+  // Uses register() to store definitions without pushing onto the visible stack.
   useEffect(() => {
     if (page.bottom_sheets) {
+      const store = useBottomSheetStore.getState();
       for (const sheet of page.bottom_sheets) {
-        // Sheets are pre-registered in the store keyed by their id.
-        // The sheet action handler resolves them from this store.
-        bottomSheetStore.open({
+        store.register({
           id: sheet.id,
           title: sheet.title,
           size: sheet.size ?? "medium",
@@ -37,11 +36,9 @@ export function PageStandardRenderer({ page }: PageProps): React.ReactElement {
           on_dismiss: sheet.on_dismiss,
           on_open: sheet.on_open,
         });
-        // Immediately close — we only need them registered, not visible.
-        bottomSheetStore.close(sheet.id);
       }
     }
-  }, [page.bottom_sheets, bottomSheetStore]);
+  }, [page.bottom_sheets]);
 
   // Page lifecycle: on_load / on_dismount
   useEffect(() => {

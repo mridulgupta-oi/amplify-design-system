@@ -5,13 +5,13 @@ import {
   Box,
   Stack,
   Text,
-  Icon as DSIcon,
   Card as DSCard,
   Tag as DSTag,
   ProgressIndicator as DSProgressIndicator,
 } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
 import { renderMedia } from "../_shared/render-media.js";
+import { SduiIcon } from "../_shared/sdui-icon.js";
 
 export function InfoRowRenderer(node: Node): React.ReactElement {
   return (
@@ -61,29 +61,39 @@ export function InfoRowRenderer(node: Node): React.ReactElement {
             <Stack direction="row" align="center" gap={8}>
               {v.status_tag && (
                 <DSTag
-                  label={v.status_tag.label}
-                  variant={v.status_tag.variant}
-                  color={v.status_tag.color}
+                  label={v.status_tag.label?.text ?? ""}
                 />
               )}
               {v.badge && (
-                <Box
-                  bg={v.badge.bg_color}
-                  rounded={v.badge.border_radius ?? 12}
-                  paddingHorizontal={8}
-                  paddingVertical={2}
-                >
-                  <Text
-                    color={v.badge.color}
-                    size={v.badge.font_size ?? 12}
+                v.badge.dot ? (
+                  <Box
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: v.badge.color ?? "red",
+                    }}
+                  />
+                ) : v.badge.count != null ? (
+                  <Box
+                    style={{
+                      backgroundColor: v.badge.color ?? "red",
+                      borderRadius: 12,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      minWidth: 20,
+                      alignItems: "center" as const,
+                    }}
                   >
-                    {v.badge.text}
-                  </Text>
-                </Box>
+                    <Text style={{ color: "#fff", fontSize: 12 }}>
+                      {v.badge.count}
+                    </Text>
+                  </Box>
+                ) : null
               )}
               {v.right_media && renderMedia(v.right_media)}
               {v.right_icon && (
-                <DSIcon
+                <SduiIcon
                   name={v.right_icon.name}
                   size={v.right_icon.size}
                   color={v.right_icon.color}

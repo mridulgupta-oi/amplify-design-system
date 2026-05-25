@@ -1,8 +1,9 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { ChipSnippetSchema } from "@one-impression/sdk-native-sdui";
-import { Chip as DSChip, Icon as DSIcon } from "@amplify-ai/ui-native";
+import { Chip as DSChip } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
+import { SduiIcon } from "../_shared/sdui-icon.js";
 
 export function ChipRenderer(node: Node): React.ReactElement {
   return (
@@ -25,7 +26,7 @@ export function ChipRenderer(node: Node): React.ReactElement {
           bg={v.selected ? v.selected_bg_color : v.bg_color}
           icon={
             v.icon ? (
-              <DSIcon
+              <SduiIcon
                 name={v.icon.name}
                 size={v.icon.size}
                 color={v.icon.color}

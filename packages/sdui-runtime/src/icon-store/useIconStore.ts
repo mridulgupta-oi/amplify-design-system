@@ -7,13 +7,47 @@
  *   3. Generic placeholder SVG
  *
  * Returns the raw SVG string — use parseSvg() to convert to a component.
+ *
+ * MMKV is optional — when unavailable (e.g. Expo Go), the store
+ * falls back to in-memory caching + bundled essentials.
  */
-import { useCallback } from 'react';
-import { MMKV } from 'react-native-mmkv';
+import { useCallback, useContext } from 'react';
 import essentials from './essentials.json';
+import { IconStoreRevisionContext } from './IconStoreProvider.js';
 
-/** Dedicated MMKV instance for icon storage. */
-const iconStorage = new MMKV({ id: 'sdui-icon-store' });
+/** MMKV interface we need — avoids hard import that crashes Expo Go. */
+interface MMKVLike {
+  getString(key: string): string | undefined;
+  getNumber(key: string): number | undefined;
+  set(key: string, value: string | number): void;
+}
+
+/** In-memory fallback when MMKV native module is unavailable. */
+const memoryStore = new Map<string, string | number>();
+const memoryFallback: MMKVLike = {
+  getString: (k) => {
+    const v = memoryStore.get(k);
+    return typeof v === 'string' ? v : undefined;
+  },
+  getNumber: (k) => {
+    const v = memoryStore.get(k);
+    return typeof v === 'number' ? v : undefined;
+  },
+  set: (k, v) => memoryStore.set(k, v),
+};
+
+/** Try to create an MMKV instance; fall back to in-memory if native module missing. */
+function createStorage(): MMKVLike {
+  try {
+    const { MMKV } = require('react-native-mmkv');
+    return new MMKV({ id: 'sdui-icon-store' });
+  } catch {
+    return memoryFallback;
+  }
+}
+
+/** Dedicated storage instance for icons. */
+const iconStorage = createStorage();
 
 /** MMKV keys */
 const MANIFEST_KEY = 'icon-manifest';
@@ -28,7 +62,7 @@ const PLACEHOLDER_SVG =
 const essentialIcons: Record<string, string> = essentials.icons;
 
 /**
- * Read the full icon manifest from MMKV.
+ * Read the full icon manifest from storage.
  * Returns null if nothing is persisted yet.
  */
 function getManifestFromStorage(): Record<string, string> | null {
@@ -51,7 +85,7 @@ export function getLastFetchTimestamp(): number {
   return iconStorage.getNumber(LAST_FETCH_KEY) ?? 0;
 }
 
-/** Persist a new manifest + version to MMKV. */
+/** Persist a new manifest + version to storage. */
 export function persistManifest(
   icons: Record<string, string>,
   version: string,
@@ -78,8 +112,13 @@ export interface IconStoreResult {
  * ```
  */
 export function useIconStore(): IconStoreResult {
+  // Reading the revision context forces this hook's component to re-render
+  // when the IconStoreProvider bumps the counter after a manifest fetch.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _revision = useContext(IconStoreRevisionContext);
+
   const getIcon = useCallback((name: string): string => {
-    // 1. Try MMKV manifest
+    // 1. Try persisted manifest
     const manifest = getManifestFromStorage();
     if (manifest?.[name]) return manifest[name];
 
@@ -88,14 +127,17 @@ export function useIconStore(): IconStoreResult {
 
     // 3. Generic placeholder
     return PLACEHOLDER_SVG;
-  }, []);
+  // Re-create callback when revision changes so cached closures refresh
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_revision]);
 
   const hasIcon = useCallback((name: string): boolean => {
     const manifest = getManifestFromStorage();
     if (manifest?.[name]) return true;
     if (essentialIcons[name]) return true;
     return false;
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_revision]);
 
   return { getIcon, hasIcon };
 }

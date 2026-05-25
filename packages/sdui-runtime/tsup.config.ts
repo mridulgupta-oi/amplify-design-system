@@ -22,5 +22,8 @@ export default defineConfig({
     "expo-web-browser",
     // WebView used by page renderers (WebViewPage, WebViewPageWithAction)
     "react-native-webview",
+    // Icon store dependencies (native modules resolved by consumer app)
+    "react-native-mmkv",
+    "react-native-svg",
   ],
 });

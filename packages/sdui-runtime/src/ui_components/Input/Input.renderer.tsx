@@ -21,7 +21,7 @@ export function InputRenderer(node: Node): React.ReactElement {
         <DSInput
           placeholder={v.placeholder}
           value={v.value}
-          label={v.label ? v.label.data.text : undefined}
+          label={v.label?.text}
           disabled={v.disabled}
           maxLength={v.max_length}
           multiline={v.multiline}

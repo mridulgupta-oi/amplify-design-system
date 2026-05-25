@@ -1,9 +1,18 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { TagComponentSchema } from "@one-impression/sdk-native-sdui";
-import { Tag as DSTag } from "@amplify-ai/ui-native";
+import { Tag as DSTag, resolveColor, resolveIconSize } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
-import { Interpreter } from "../../interpreter/index.js";
+import { useIconStore, parseSvg } from "../../icon-store/index.js";
+
+function TagIconInner({ name, color, size }: { name: string; color?: string; size?: number | string }) {
+  const { getIcon } = useIconStore();
+  const svg = getIcon(name);
+  const resolvedColor = resolveColor(color as any) ?? undefined;
+  const resolvedSize = resolveIconSize(size as any) ?? 14;
+  const SvgComponent = parseSvg(name, svg);
+  return <SvgComponent width={resolvedSize} height={resolvedSize} color={resolvedColor} />;
+}
 
 export function TagRenderer(node: Node): React.ReactElement {
   return (
@@ -20,8 +29,8 @@ export function TagRenderer(node: Node): React.ReactElement {
     >
       {(v) => (
         <DSTag
-          label={v.label.data.text}
-          icon={v.icon ? <Interpreter node={v.icon} /> : undefined}
+          label={v.label?.text ?? ""}
+          icon={v.icon ? <TagIconInner name={v.icon.name} color={v.icon.color} size={v.icon.size} /> : undefined}
         />
       )}
     </SduiNode>

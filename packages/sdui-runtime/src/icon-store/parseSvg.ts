@@ -9,6 +9,8 @@ import { SvgXml } from 'react-native-svg';
 
 /** Cache of already-parsed SVG components keyed by icon name. */
 const svgCache = new Map<string, React.FC<SvgIconProps>>();
+/** Track which SVG string is cached per name so we invalidate on change. */
+const svgSourceCache = new Map<string, string>();
 
 export interface SvgIconProps {
   width?: number;
@@ -29,10 +31,18 @@ export interface SvgIconProps {
  */
 export function parseSvg(name: string, svg: string): React.FC<SvgIconProps> {
   const cached = svgCache.get(name);
-  if (cached) return cached;
+  if (cached && svgSourceCache.get(name) === svg) return cached;
 
   const Component: React.FC<SvgIconProps> = ({ width = 24, height = 24, color }) => {
-    const resolvedSvg = color ? svg.replace(/currentColor/g, color) : svg;
+    let resolvedSvg = color ? svg.replace(/currentColor/g, color) : svg;
+    // Sanitize SVG for react-native-svg's SvgXml parser:
+    // 1. Strip JSX-style comments {/* ... */} (some source SVGs have them)
+    resolvedSvg = resolvedSvg.replace(/\{\/\*.*?\*\/\}/g, '');
+    // 2. Strip inter-tag whitespace (prevents RN "Text strings" warnings)
+    resolvedSvg = resolvedSvg.replace(/>\s+</g, '><');
+    // 3. Fix invalid width/height="currentColor" (should be numeric; let
+    //    the component's width/height props control sizing instead)
+    resolvedSvg = resolvedSvg.replace(/\b(width|height)="currentColor"/g, '');
 
     return React.createElement(SvgXml, {
       xml: resolvedSvg,
@@ -43,6 +53,7 @@ export function parseSvg(name: string, svg: string): React.FC<SvgIconProps> {
 
   Component.displayName = `SvgIcon(${name})`;
   svgCache.set(name, Component);
+  svgSourceCache.set(name, svg);
 
   return Component;
 }
@@ -50,4 +61,5 @@ export function parseSvg(name: string, svg: string): React.FC<SvgIconProps> {
 /** Clear the SVG component cache. Useful for testing or memory pressure. */
 export function clearSvgCache(): void {
   svgCache.clear();
+  svgSourceCache.clear();
 }

@@ -1,4 +1,4 @@
-export { IconStoreProvider } from './IconStoreProvider.js';
+export { IconStoreProvider, IconStoreRevisionContext } from './IconStoreProvider.js';
 export type { IconStoreProviderProps } from './IconStoreProvider.js';
 export { useIconStore } from './useIconStore.js';
 export type { IconStoreResult } from './useIconStore.js';

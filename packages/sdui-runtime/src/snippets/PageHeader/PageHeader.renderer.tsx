@@ -1,9 +1,10 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { PageHeaderSchema } from "@one-impression/sdk-native-sdui";
-import { Box, Stack, Text, Icon as DSIcon } from "@amplify-ai/ui-native";
+import { Box, Stack, Text } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
 import { Interpreter } from "../../interpreter/index.js";
+import { SduiIcon } from "../_shared/sdui-icon.js";
 
 export function PageHeaderRenderer(node: Node): React.ReactElement {
   return (
@@ -23,14 +24,14 @@ export function PageHeaderRenderer(node: Node): React.ReactElement {
           <Stack direction="row" align="center" justify="space-between">
             <Stack direction="row" align="center" gap={8}>
               {v.left_icon && (
-                <DSIcon
+                <SduiIcon
                   name={v.left_icon.name}
                   size={v.left_icon.size}
                   color={v.left_icon.color}
                 />
               )}
               {v.icon && (
-                <DSIcon
+                <SduiIcon
                   name={v.icon.name}
                   size={v.icon.size}
                   color={v.icon.color}
@@ -57,7 +58,7 @@ export function PageHeaderRenderer(node: Node): React.ReactElement {
             </Stack>
             <Stack direction="row" align="center" gap={8}>
               {v.right_icon && (
-                <DSIcon
+                <SduiIcon
                   name={v.right_icon.name}
                   size={v.right_icon.size}
                   color={v.right_icon.color}

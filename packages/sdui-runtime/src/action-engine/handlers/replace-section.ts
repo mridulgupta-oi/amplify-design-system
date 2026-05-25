@@ -13,5 +13,5 @@ export async function handleReplaceSection(
   const payload = ReplaceSectionPayloadSchema.parse(action.payload);
 
   const { usePageStore } = await import("../../state/usePageStore.js");
-  usePageStore.getState().replaceNode(payload.target, payload.with_node);
+  usePageStore.getState().replaceSection(payload.target, payload.with_node);
 }

@@ -1,9 +1,21 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { ButtonComponentSchema } from "@one-impression/sdk-native-sdui";
-import { Button as DSButton } from "@amplify-ai/ui-native";
+import { Button as DSButton, Text, resolveColor, resolveIconSize } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
-import { Interpreter } from "../../interpreter/index.js";
+import { useIconStore, parseSvg } from "../../icon-store/index.js";
+
+function ButtonIconInner({ name, color, size }: { name: string; color?: string; size?: number | string }) {
+  const { getIcon } = useIconStore();
+  const svg = getIcon(name);
+  const resolvedColor = resolveColor(color as any) ?? undefined;
+  const resolvedSize = resolveIconSize(size as any) ?? 18;
+  const SvgComponent = parseSvg(name, svg);
+  return <SvgComponent width={resolvedSize} height={resolvedSize} color={resolvedColor} />;
+}
+
+const SIZE_MAP: Record<string, string> = { small: "sm", medium: "md", large: "lg" };
+const VARIANT_MAP: Record<string, string> = { primary: "primary", secondary: "secondary", tertiary: "ghost", "no-background": "ghost" };
 
 export function ButtonRenderer(node: Node): React.ReactElement {
   return (
@@ -20,14 +32,14 @@ export function ButtonRenderer(node: Node): React.ReactElement {
     >
       {(v) => (
         <DSButton
-          variant={v.variant}
-          size={v.size}
+          variant={(VARIANT_MAP[v.variant] ?? v.variant) as any}
+          size={(SIZE_MAP[v.size ?? "medium"] ?? v.size) as any}
           loading={v.loading}
           disabled={v.disabled}
+          icon={v.icon_left ? <ButtonIconInner name={v.icon_left.name} color={v.icon_left.color} size={v.icon_left.size} /> : v.icon_right ? <ButtonIconInner name={v.icon_right.name} color={v.icon_right.color} size={v.icon_right.size} /> : undefined}
+          iconPosition={v.icon_right && !v.icon_left ? "right" : "left"}
         >
-          {v.icon_left && <Interpreter node={v.icon_left} />}
-          <Interpreter node={v.label} />
-          {v.icon_right && <Interpreter node={v.icon_right} />}
+          {v.label?.text ?? ""}
         </DSButton>
       )}
     </SduiNode>

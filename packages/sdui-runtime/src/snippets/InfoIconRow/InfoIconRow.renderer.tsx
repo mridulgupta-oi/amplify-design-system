@@ -1,8 +1,9 @@
 import React from "react";
 import type { Node } from "@one-impression/sdk-native-sdui";
 import { InfoIconRowSchema } from "@one-impression/sdk-native-sdui";
-import { Box, Stack, Text, Icon as DSIcon, Card as DSCard } from "@amplify-ai/ui-native";
+import { Box, Stack, Text, Card as DSCard } from "@amplify-ai/ui-native";
 import { SduiNode } from "../../sdui-node/index.js";
+import { SduiIcon } from "../_shared/sdui-icon.js";
 
 export function InfoIconRowRenderer(node: Node): React.ReactElement {
   return (
@@ -21,7 +22,7 @@ export function InfoIconRowRenderer(node: Node): React.ReactElement {
         const content = (
           <Stack direction="row" align="center" gap={12}>
             {v.icon && (
-              <DSIcon
+              <SduiIcon
                 name={v.icon.name}
                 size={v.icon.size}
                 color={v.icon.color}

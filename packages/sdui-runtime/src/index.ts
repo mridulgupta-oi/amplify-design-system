@@ -67,3 +67,11 @@ export {
   capabilityHandlerRegistry,
   resolveRenderer,
 } from "./registries/index.js";
+
+// ── Icon store ──
+export { IconStoreProvider } from "./icon-store/index.js";
+export type { IconStoreProviderProps } from "./icon-store/index.js";
+export { useIconStore } from "./icon-store/index.js";
+export type { IconStoreResult } from "./icon-store/index.js";
+export { parseSvg, clearSvgCache } from "./icon-store/index.js";
+export type { SvgIconProps } from "./icon-store/index.js";

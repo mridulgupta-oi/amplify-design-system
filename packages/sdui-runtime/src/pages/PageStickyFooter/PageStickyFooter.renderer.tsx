@@ -45,7 +45,6 @@ export function PageStickyFooterRenderer({
   page,
 }: PageProps): React.ReactElement {
   const actionEngine = useActionEngine();
-  const bottomSheetStore = useBottomSheetStore();
   const { refreshing, onRefresh } = usePageRefresh(page.on_refresh);
 
   const pageData = page.data as
@@ -54,11 +53,12 @@ export function PageStickyFooterRenderer({
   const footer = pageData?.footer;
   const keyboardAware = pageData?.keyboard_aware ?? false;
 
-  // Register inline bottom sheets
+  // Register inline bottom sheets so sheet actions can open them by ID later.
   useEffect(() => {
     if (page.bottom_sheets) {
+      const store = useBottomSheetStore.getState();
       for (const sheet of page.bottom_sheets) {
-        bottomSheetStore.open({
+        store.register({
           id: sheet.id,
           title: sheet.title,
           size: sheet.size ?? "medium",
@@ -66,10 +66,9 @@ export function PageStickyFooterRenderer({
           on_dismiss: sheet.on_dismiss,
           on_open: sheet.on_open,
         });
-        bottomSheetStore.close(sheet.id);
       }
     }
-  }, [page.bottom_sheets, bottomSheetStore]);
+  }, [page.bottom_sheets]);
 
   // Page lifecycle: on_load / on_dismount
   useEffect(() => {

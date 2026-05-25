@@ -12,13 +12,20 @@
  * Children render immediately — the icon store always has essentials
  * as a fallback, so manifest fetch is non-blocking.
  */
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState, createContext } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import {
   getCachedVersion,
   getLastFetchTimestamp,
   persistManifest,
 } from './useIconStore.js';
+
+/**
+ * Context that carries a revision counter. Incrementing this forces all
+ * useIconStore() consumers to re-render after an async manifest fetch,
+ * so they pick up the newly-persisted icons instead of showing placeholders.
+ */
+export const IconStoreRevisionContext = createContext<number>(0);
 
 /** One hour in milliseconds. */
 const REFETCH_INTERVAL_MS = 60 * 60 * 1000;
@@ -83,14 +90,21 @@ export const IconStoreProvider: React.FC<IconStoreProviderProps> = ({
   children,
 }) => {
   const lastFetchRef = useRef<number>(getLastFetchTimestamp());
+  const [revision, setRevision] = useState(0);
 
   const doFetch = useCallback(() => {
     const version = getCachedVersion();
-    fetchManifest(bffBaseUrl, authToken, version).catch((err) => {
-      if (__DEV__) {
-        console.warn('[IconStore] Manifest fetch error:', err);
-      }
-    });
+    fetchManifest(bffBaseUrl, authToken, version)
+      .then(() => {
+        // Bump revision so all useIconStore consumers re-render
+        // and pick up the newly-persisted manifest icons.
+        setRevision((r) => r + 1);
+      })
+      .catch((err) => {
+        if (__DEV__) {
+          console.warn('[IconStore] Manifest fetch error:', err);
+        }
+      });
     lastFetchRef.current = Date.now();
   }, [bffBaseUrl, authToken]);
 
@@ -114,6 +128,10 @@ export const IconStoreProvider: React.FC<IconStoreProviderProps> = ({
     return () => subscription.remove();
   }, [doFetch]);
 
-  // Non-blocking — children render immediately with essentials fallback
-  return React.createElement(React.Fragment, null, children);
+  // Provide revision counter so useIconStore consumers re-render on manifest load
+  return React.createElement(
+    IconStoreRevisionContext.Provider,
+    { value: revision },
+    children,
+  );
 };
